@@ -14,9 +14,6 @@ module SessionsHelper
 
   # Returns the current logged-in user (if any).
   def current_user
-    # if session[:user_id]
-    #   @current_user ||= User.find_by(id: session[:user_id])
-    #   end
     if (user_id = session[:user_id])
       @current_user ||= User.find_by(id: user_id)
     elsif (user_id = cookies.encrypted[:user_id])
@@ -27,6 +24,11 @@ module SessionsHelper
         @current_user = user
       end
     end
+  end
+
+  # Returns true if the given user is the current user.
+  def current_user?(user)
+    user && user == current_user
   end
 
   # Returns true if the user is logged in, false otherwise.
@@ -46,5 +48,16 @@ module SessionsHelper
     forget(current_user)
     session.delete(:user_id)
     @current_user = nil
+  end
+
+  # Redirects to stored location (or to the defult)
+  def redirect_back_or(default)
+    redirect_to(session[:forwarding_url] || default)
+    session.delete(:forwarding_url)
+  end
+
+  # Stores the URL trying to be accessed.
+  def store_location
+    session[:forwarding_url] = request.original_url if request.get?
   end
 end
